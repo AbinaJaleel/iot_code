@@ -1,0 +1,45 @@
+# pip install aiocoap streamlit
+import asyncio
+import json
+import random
+
+from aiocoap import Context, Message
+from aiocoap.resource import Resource, Site
+from aiocoap.numbers.contentformat import ContentFormat
+
+
+class Sensor(Resource):
+
+    async def render_get(self, request):
+
+        data = {
+            "temperature": round(random.uniform(20, 35), 2),
+            "humidity": round(random.uniform(40, 80), 2)
+        }
+
+        print("Sending sensor data:", data)
+
+        return Message(
+            payload=json.dumps(data).encode(),
+            content_format=ContentFormat.JSON
+        )
+
+
+async def main():
+
+    site = Site()
+
+    site.add_resource(["sensor"], Sensor())
+
+    await Context.create_server_context(
+        site,
+        bind=("127.0.0.1", 5683)
+    )
+
+    print("CoAP Server started...")
+    print("Waiting for client requests...")
+
+    await asyncio.get_running_loop().create_future()
+
+
+asyncio.run(main())
